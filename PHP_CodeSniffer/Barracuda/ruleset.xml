@@ -22,6 +22,8 @@
 		<exclude name="Generic.WhiteSpace.DisallowTabIndent"/>
 		<!-- Exclude spacing around parenthesis checks -->
 		<exclude name="PSR2.ControlStructures.ControlStructureSpacing"/>
+		<!-- Exclude requiring a doc block for an entire file -->
+		<exclude name="Barracuda.Commenting.DocComment.Missing"/>
 	</rule>
 
 	<!-- Configure for concatenation operator spacing -->
