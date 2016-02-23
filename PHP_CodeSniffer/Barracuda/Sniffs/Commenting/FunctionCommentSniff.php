@@ -8,6 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
+ * @author    Samuel Souder <sam@samsouder.com>
  * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -153,9 +154,33 @@ class Barracuda_Sniffs_Commenting_FunctionCommentSniff extends PEAR_Sniffs_Comme
                 }//end if
             }//end if
         } else {
-            $error = 'Missing @return tag in function comment';
-            $phpcsFile->addError($error, $tokens[$commentStart]['comment_closer'], 'MissingReturn');
-        }//end if
+            // Allow @return tag to be omitted if there is no return in the function
+            if (isset($tokens[$stackPtr]['scope_closer']) === true) {
+                $endToken = $tokens[$stackPtr]['scope_closer'];
+                for ($returnToken = $stackPtr; $returnToken < $endToken; $returnToken++) {
+                    if ($tokens[$returnToken]['code'] === T_CLOSURE) {
+                        $returnToken = $tokens[$returnToken]['scope_closer'];
+                        continue;
+                    }
+
+                    if ($tokens[$returnToken]['code'] === T_RETURN
+                        || $tokens[$returnToken]['code'] === T_YIELD
+                    ) {
+                        break;
+                    }
+                }
+
+                if ($returnToken !== $endToken) {
+                    // If the function is returning something, error out because we don't
+                    // have a @return tag to match
+                    $semicolon = $phpcsFile->findNext(T_WHITESPACE, ($returnToken + 1), null, true);
+                    if ($tokens[$semicolon]['code'] !== T_SEMICOLON) {
+                        $error = 'Missing @return tag in function comment';
+                        $phpcsFile->addError($error, $tokens[$commentStart]['comment_closer'], 'MissingReturn');
+                    }
+                }
+            }//end if
+        }
 
     }//end processReturn()
 
